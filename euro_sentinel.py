@@ -32,8 +32,6 @@ def plot_euro_risk(df):
     plt.legend()
     
     print("A abrir a janela do gráfico...")
-    
-    # ESTE É O TRUQUE: Forçar o desenho e manter aberto
     plt.show(block=True) 
 
 if __name__ == "__main__":
@@ -44,4 +42,4 @@ if __name__ == "__main__":
         print("Dados obtidos com sucesso. A abrir gráfico...")
         plot_euro_risk(df_euro)
     else:
-        print("Erro: O Yahoo não devolveu dados. Verifica a tua ligação.")
+        print("Erro: O Yahoo não devolveu dados.")
