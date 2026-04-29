@@ -1,35 +1,38 @@
 # Macro Trading Lab
 
-Este repositório é um laboratório pessoal dedicado à exploração de modelos macroeconómicos, análise quantitativa e desenvolvimento de algoritmos de trading utilizando Python. O foco principal é a conversão de teorias financeiras em sistemas de backtesting robustos e mensuráveis.
+Este repositório é um laboratório pessoal dedicado à exploração de modelos macroeconómicos, análise quantitativa e desenvolvimento de algoritmos de trading utilizando Python. O foco principal é a conversão de teorias financeiras em sistemas de backtesting robustos e ferramentas de monitorização em tempo real.
 
-O projeto foi desenvolvido no contexto de aprendizagem académica e técnica (FCUL), integrando princípios de engenharia de software com análise de séries temporais financeiras.
-
-## Visão Geral
-
-O Macro Trading Lab serve como uma plataforma para testar hipóteses sobre o comportamento dos mercados, com especial atenção ao mercado de dívida soberana (Yields) e à sua influência nos ativos de risco.
+O projeto integra princípios de engenharia de software com análise de séries temporais, permitindo uma visão técnica sobre ativos de renda fixa e moedas.
 
 ## Estrutura do Repositório
 
-O repositório está organizado por módulos de estratégia, permitindo a comparação entre diferentes abordagens algorítmicas:
+O laboratório está organizado nos seguintes módulos principais:
 
-### 1. Yield Sentinel (SMA Edition)
-O primeiro módulo do laboratório foca-se no "momentum" das taxas de juro de longo prazo.
-*   **Ficheiro**: `sma_backtest.py`
-*   **Ativo Base**: US 10-Year Treasury Yield (^TNX).
-*   **Estratégia**: Cruzamento de Médias Móveis Simples (SMA). Utiliza uma janela curta de 10 dias e uma janela longa de 30 dias para gerar sinais de entrada e saída.
-*   **Objetivo**: Validar se uma estratégia simples de seguimento de tendência consegue proteger capital durante períodos de volatilidade nas taxas de juro.
+### 1. Yield Sentinel & SMA Backtest
+Estudo focado no momentum das taxas de juro de longo prazo dos EUA.
+*   **Ficheiros**: `yield_sentinel.py`, `sma_backtest.py`
+*   **Estratégia**: Análise de tendência baseada no cruzamento de Médias Móveis Simples (SMA) sobre a Yield de 10 anos (^TNX).
+*   **Objetivo**: Identificar mudanças de ciclo nas taxas de juro e avaliar a eficácia de estratégias de seguimento de tendência.
 
-## Tecnologias e Dependências
+### 2. Euro Sentinel
+Módulo dedicado à análise do par de moedas EUR/USD e indicadores da Zona Euro.
+*   **Ficheiro**: `euro_sentinel.py`
+*   **Objetivo**: Monitorizar a força relativa do Euro e analisar o impacto de diferenciais de taxas de juro e dados macroeconómicos europeus na taxa de câmbio.
 
-O projeto utiliza a stack padrão de Data Science em Python:
+### 3. Main Dashboard
+A interface central de visualização do laboratório.
+*   **Ficheiro**: `main_dashboard.py`
+*   **Funcionalidade**: Consolida as métricas dos vários sentinelas numa única visualização gráfica, permitindo uma análise comparativa rápida entre Yields, Moedas e a performance das estratégias.
 
-*   **Python 3.x**: Linguagem base.
+## Tecnologias Utilizadas
+
+*   **Python 3.x**: Linguagem principal.
 *   **Pandas**: Processamento de dados e cálculo de indicadores estatísticos.
-*   **YFinance**: Interface para extração de dados históricos do Yahoo Finance.
-*   **Matplotlib**: Motor gráfico para visualização de performance e curvas de capital (Equity Curves).
+*   **YFinance**: Extração de dados históricos e em tempo real do Yahoo Finance.
+*   **Matplotlib / Plotly**: Motores gráficos para visualização de performance e dashboards.
 
-## Instalação e Utilização
+## Como Executar
 
 1. Clonar o repositório:
    ```bash
-   git clone [https://github.com/tiagocosta1234/macro-trading-lab.git](https://github.com/tiagocosta1234/macro-trading-lab.git)
+   git clone [https://github.com/TEU-UTILIZADOR/macro-trading-lab.git](https://github.com/TEU-UTILIZADOR/macro-trading-lab.git)
