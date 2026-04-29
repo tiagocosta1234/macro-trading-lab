@@ -1,73 +1,108 @@
 import pandas as pd
 import yfinance as yf
 import matplotlib.pyplot as plt
+import numpy as np
 
 def run_sma_backtest():
-    # 1. Configurações Iniciais
-    ticker = "^TNX"  # Yields do Tesouro EUA a 10 anos
+    # 1. Initial Configurations
+    ticker = "MNQ=F"  # E-micro Nasdaq 100 Futures
     start_date = "2020-01-01"
-    end_date = "2026-04-20"
-    initial_capital = 100000  # Capital inicial de 1 milhão de euros
+    end_date = "2026-04-25"
+    initial_capital = 100000
+    
+    # Micro Contract Parameters (MNQ)
+    n_contracts = 5  # Number of micro contracts to trade
+    point_value = 2  # 1 point in MNQ = $2
+    dollar_per_point = n_contracts * point_value
+    daily_loss_limit = -0.04 # 4% Daily Loss Limit
 
-    print(f"--- Backtest para {ticker} ---")
+    print(f"--- Quantitative Backtest: {ticker} (5 Micros) ---")
 
-    # 2. Download de Dados
-    # O yfinance devolve um DataFrame com os preços históricos
+    # 2. Data Download
     data = yf.download(ticker, start=start_date, end=end_date)
-    
-    if data.empty:
-        print("Erro: Não foi possível obter dados. Verifica a tua ligação à internet.")
-        return
+    if data.empty: 
+        print("Error: No data found.")
+        return None
 
-    # 3. Definição da Estratégia (Lógica do Sentinel)
-    # Dduas médias móveis para identificar a tendência
-    window_fast = 10
-    window_slow = 30
-    
-    data['SMA_Fast'] = data['Close'].rolling(window=window_fast).mean()
-    data['SMA_Slow'] = data['Close'].rolling(window=window_slow).mean()
+    # Clean columns in case of MultiIndex
+    if isinstance(data.columns, pd.MultiIndex):
+        data.columns = data.columns.get_level_values(0)
 
-    # Gerar Sinais: 
-    # 1 (Compra/Long) quando a média curta está acima da longa
-    # 0 (Fora do Mercado) quando está abaixo
+    # 3. SMA Strategy: SMA(10) vs SMA(30)
+    data['SMA_Fast'] = data['Close'].rolling(window=10).mean()
+    data['SMA_Slow'] = data['Close'].rolling(window=30).mean()
     data['Signal'] = (data['SMA_Fast'] > data['SMA_Slow']).astype(int)
 
-    # 4. Cálculo de Retornos
-    # Retorno diário do ativo (percentagem de variação)
-    data['Asset_Returns'] = data['Close'].pct_change()
+    # 4. PnL Calculation (Point-based)
+    data['Point_Change'] = data['Close'].diff()
+    data['Daily_PnL'] = data['Signal'].shift(1) * data['Point_Change'] * dollar_per_point
 
-    # Retorno da Estratégia:
-    data['Strategy_Returns'] = data['Signal'].shift(1) * data['Asset_Returns']
-
-    # 5. Cálculo da Equity Curve (Evolução do Capital)
-    # O capital cresce de forma composta: (1 + r1) * (1 + r2) ...
-    data['Strategy_Equity'] = (1 + data['Strategy_Returns'].fillna(0)).cumprod() * initial_capital
-    data['Buy_Hold_Equity'] = (1 + data['Asset_Returns'].fillna(0)).cumprod() * initial_capital
-
-    # 6. Métricas de Performance
-    final_value = data['Strategy_Equity'].iloc[-1]
-    total_return = (final_value / initial_capital - 1) * 100
-    data['Peak'] = data['Strategy_Equity'].cummax()
-    data['Drawdown'] = (data['Strategy_Equity'] - data['Peak']) / data['Peak']
-    max_dd = data['Drawdown'].min() * 100
+    # 5. Risk Management: Daily Loss Limit (4%)
+    capital_prev = initial_capital
+    pnl_protected = []
     
-    print(f"Capital Inicial: {initial_capital:.2f}€")
-    print(f"Capital Final: {final_value:.2f}€")
-    print(f"Retorno Total: {total_return:.2f}%")
-    print(f"Max Drawdown: {max_dd:.2f}%")
+    for i in range(len(data)):
+        # Calculate daily return relative to accumulated capital
+        daily_return_pct = data['Daily_PnL'].iloc[i] / capital_prev if capital_prev > 0 else 0
+        
+        if daily_return_pct <= daily_loss_limit:
+            # Trigger daily stop at exactly 4% of previous day's capital
+            actual_pnl = capital_prev * daily_loss_limit
+        else:
+            actual_pnl = data['Daily_PnL'].iloc[i]
+            
+        pnl_protected.append(actual_pnl)
+        capital_prev += actual_pnl
 
-    # 7. Visualização Gráfica
+    data['Daily_PnL_Final'] = pnl_protected
+
+    # 6. Equity Curve Evolution
+    data['Strategy_Equity'] = data['Daily_PnL_Final'].cumsum() + initial_capital
+    data['Buy_Hold_Equity'] = (data['Close'] / data['Close'].iloc[0]) * initial_capital
+
+    # 7. Signal Markers for Plotting
+    data['Buy_Marker'] = np.where((data['Signal'] == 1) & (data['Signal'].shift(1) == 0), data['Strategy_Equity'], np.nan)
+    data['Sell_Marker'] = np.where((data['Signal'] == 0) & (data['Signal'].shift(1) == 1), data['Strategy_Equity'], np.nan)
+
+    # 8. Performance Metrics
+    final_strategy = data['Strategy_Equity'].iloc[-1]
+    final_buy_hold = data['Buy_Hold_Equity'].iloc[-1]
+    max_dd = ((data['Strategy_Equity'] - data['Strategy_Equity'].cummax()) / data['Strategy_Equity'].cummax()).min() * 100
+    
+    # New: Leverage Metrics
+    current_price = data['Close'].iloc[-1]
+    notional_exposure = current_price * point_value * n_contracts
+    leverage = notional_exposure / final_strategy
+
+    print("-" * 40)
+    print(f"FINAL RESULTS ({start_date} to {end_date})")
+    print(f"Final Strategy Equity:  ${final_strategy:,.2f}")
+    print(f"Final Buy & Hold Equity: ${final_buy_hold:,.2f}")
+    print(f"Absolute Difference:     ${(final_strategy - final_buy_hold):,.2f}")
+    print(f"Max Strategy Drawdown:   {max_dd:.2f}%")
+    print("-" * 40)
+    print(f"Current Market Value Controlled: ${notional_exposure:,.2f}")
+    print(f"Current Account Leverage:        {leverage:.2f}x")
+    print("-" * 40)
+    
+    # 9. Plotting
     plt.figure(figsize=(12, 6))
-    plt.plot(data['Strategy_Equity'], label='Estratégia Yield Sentinel', color='blue', linewidth=2)
-    plt.plot(data['Buy_Hold_Equity'], label='Buy & Hold (Referência)', color='gray', linestyle='--')
+    plt.plot(data['Strategy_Equity'], label='Strategy (5 Micros MNQ)', color='green', lw=2)
+    plt.plot(data['Buy_Hold_Equity'], label='Buy & Hold Baseline', color='gray', linestyle='--', alpha=0.7)
     
-    plt.title(f'Backtesting: SMA approach vs Buy & Hold ({ticker})')
-    plt.xlabel('Data')
-    plt.ylabel('Valor da Carteira (€)')
-    plt.legend()
+    # Plot Entry/Exit Markers
+    plt.scatter(data.index, data['Buy_Marker'], marker='^', color='lime', s=100, label='Long Entry', zorder=5)
+    plt.scatter(data.index, data['Sell_Marker'], marker='v', color='red', s=100, label='Exit (Flat)', zorder=5)
+    
+    plt.title(f'MNQ=F: SMA Strategy vs Buy & Hold (Leveraged Approach)')
+    plt.ylabel('Account Value ($)')
+    plt.xlabel('Date')
     plt.grid(True, alpha=0.3)
+    plt.legend()
+    plt.tight_layout()
     plt.show()
 
-# Executar o backtesting   
+    return data
+
 if __name__ == "__main__":
     run_sma_backtest()
