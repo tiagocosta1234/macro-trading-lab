@@ -9,8 +9,7 @@ def get_market_data():
     
     # ^TNX = 10 Anos
     # ^IRX = 3 Meses (O Yahoo entrega este sempre)
-    # Se queres o efeito de "descida" da imagem 2, a alternativa 
-    # mais estável ao 2Y que o Yahoo ainda entrega é o ^FVX (5 Anos)
+
     tickers = {"5Y": "^FVX", "10Y": "^TNX"}
     
     data = yf.download(list(tickers.values()), period="1y")['Close']
@@ -20,7 +19,7 @@ def get_market_data():
     return data
 
 def calculate_metrics(df):
-    # Se a Short_Rate (5Y) for maior que a 10Y, o gráfico DESCE para o negativo
+    # Se a Short_Rate (5Y) for maior que a 10Y, o gráfico desce para o negativo
     df['Spread'] = df['10Y_Rate'] - df['Short_Rate']
     return df
 
