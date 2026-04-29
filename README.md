@@ -32,4 +32,4 @@ O projeto utiliza a stack padrão de Data Science em Python:
 
 1. Clonar o repositório:
    ```bash
-   git clone [https://github.com/TEU-UTILIZADOR/macro-trading-lab.git](https://github.com/TEU-UTILIZADOR/macro-trading-lab.git)
+   git clone [https://github.com/tiagocosta1234/macro-trading-lab.git](https://github.com/tiagocosta1234/macro-trading-lab.git)
