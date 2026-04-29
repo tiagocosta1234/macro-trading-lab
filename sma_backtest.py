@@ -47,10 +47,14 @@ def run_sma_backtest():
     # 6. Métricas de Performance
     final_value = data['Strategy_Equity'].iloc[-1]
     total_return = (final_value / initial_capital - 1) * 100
+    data['Peak'] = data['Strategy_Equity'].cummax()
+    data['Drawdown'] = (data['Strategy_Equity'] - data['Peak']) / data['Peak']
+    max_dd = data['Drawdown'].min() * 100
     
     print(f"Capital Inicial: {initial_capital:.2f}€")
     print(f"Capital Final: {final_value:.2f}€")
     print(f"Retorno Total: {total_return:.2f}%")
+    print(f"Max Drawdown: {max_dd:.2f}%")
 
     # 7. Visualização Gráfica
     plt.figure(figsize=(12, 6))
