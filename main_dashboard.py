@@ -1,5 +1,5 @@
-import yfinance as yf
-import matplotlib.pyplot as plt
+from yield_sentinel import get_market_data as get_yield_data
+from euro_sentinel import get_euro_spread
 
 def get_data():
     print("A recolher indicadores... (Sincronizando com original)")
