@@ -13,7 +13,7 @@ COMMISSION = 2.5
 VAULT_FILE = "ema50_sma15_stats.csv"
 
 def run_optimized_backtest():
-    print(f"📥 Fetching data for {SYMBOL}...")
+    print(f"Fetching data for {SYMBOL}...")
     # Fetching 60 days of 5m data
     df = yf.download(SYMBOL, period="60d", interval="5m", progress=False)
     if df.empty: return
@@ -127,7 +127,7 @@ def run_optimized_backtest():
         max_dd = (equity_series - equity_series.cummax()).min()
         win_rate = (len(log_df[log_df['Net_PnL'] > 0]) / len(log_df)) * 100
 
-        print(f"\n📊 REPORT: {SYMBOL}")
+        print(f"\nREPORT: {SYMBOL}")
         print(f"Profit: ${capital - INITIAL_CAPITAL:.2f} | Max DD: ${abs(max_dd):.2f} | WR: {win_rate:.2f}%")
 
         # Create Graph
@@ -140,7 +140,7 @@ def run_optimized_backtest():
         plt.grid(axis='y', alpha=0.2)
         plt.tight_layout()
         plt.savefig('equity_curve.png')
-        print("📈 Graph saved as 'equity_curve.png'")
+        print("Graph saved as 'equity_curve.png'")
     else:
         print("No trades executed.")
 
